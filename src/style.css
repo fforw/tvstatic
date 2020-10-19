@@ -1,0 +1,27 @@
+body
+{
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    background-color: #444;
+    color: #ccc;
+}
+
+#screen
+{
+    position: absolute;
+    left:0;
+    top:0;
+}
+
+
+.github
+{
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background: #000;
+    color: #fff;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
