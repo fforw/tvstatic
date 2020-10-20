@@ -1,12 +1,17 @@
 precision mediump float;
 
 uniform float time;
+uniform float wave[5];
+uniform float width;
+uniform float height;
+
+uniform sampler2D testImage;
 
 // Simplex 2D noise
 //
 vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
 
-float noise(vec2 v){
+float snoise(vec2 v){
     const vec4 C = vec4(0.211324865405187, 0.366025403784439,
     -0.577350269189626, 0.024390243902439);
     vec2 i  = floor(v + dot(v, C.yy) );
@@ -33,13 +38,38 @@ float noise(vec2 v){
     return 130.0 * dot(m, g);
 }
 
+float noise(vec2 v){
+    float value = snoise(v);
+    if (v.x > -2.0 && v.x < 2.0)
+    {
+        value *= 0.2;
+    }
+    return value;
+}
 
 void main(void) {
 
-    float offset = noise(vec2(time * 0.17,time * 0.31)) * 100.0;
+    float signalToNoise = 0.5;
+    float colorOffset = 0.7;
 
-    float v = noise(vec2(gl_FragCoord.x/gl_FragCoord.w * 0.2 + offset, gl_FragCoord.y/gl_FragCoord.w * 0.2) - offset);
+    float n0 = noise(vec2(time * 0.17,time * 0.31));
+    float offset = n0 * 100.0;
 
-    gl_FragColor = vec4(  v, v * 0.6, v * 0.5, 0.85);
+    float y = gl_FragCoord.y/gl_FragCoord.w;
+
+    float hOff = -50.0 + 50.0 * sin(wave[0] + y * 0.01) + 33.0 * sin(wave[1] + y * (y >= wave[2] && y <= wave[3] ? wave[4]: 0.013));
+
+    float x = (gl_FragCoord.x + hOff)/gl_FragCoord.w;
+
+    vec3 noiseColor = vec3(
+        noise(vec2(x * 0.2 + offset, y * 0.2) - offset),
+        noise(vec2(x * 0.2 + offset + colorOffset, y * 0.2) - offset),
+        noise(vec2(x * 0.2 + offset, y * 0.2) - offset + colorOffset)
+    );
+
+    float tx = ((gl_FragCoord.x + hOff) / width);
+    float ty = 1.0 - (gl_FragCoord.y / height);
+
+    gl_FragColor = vec4(noiseColor * (1.0 - signalToNoise) + texture2D(testImage, vec2(tx,ty)).xyz * signalToNoise, 1);
 }
 

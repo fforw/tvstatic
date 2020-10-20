@@ -1,3 +1,6 @@
-# Simple Starter
+# TV shader
 
-Simple JS build starter for simple, client-only demos.
+Oldschool test picture with color noise and distortion.
+
+
+[Live demo](https://fforw.github.io/tvstatic/)

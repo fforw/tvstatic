@@ -28,5 +28,6 @@ body
 
 .hidden
 {
-    display: none;
+    position: absolute;
+    left: -10000px;
 }

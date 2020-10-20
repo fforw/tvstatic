@@ -1,12 +1,9 @@
-import domready from "domready"
-import raf from "raf"
-import perfNow from "performance-now"
 // noinspection ES6UnusedImports
 import STYLE from "./style.css"
 
 import staticFragmentShader from "./static.frag"
 import staticVertexShader from "./static.vert"
-
+import loadImage from "./loadImage";
 
 const PHI = (1 + Math.sqrt(5)) / 2;
 const TAU = Math.PI * 2;
@@ -17,20 +14,55 @@ const config = {
     height: 0
 };
 
-let canvas, gl, u_time;
+let canvas, gl;
 
+
+// uniform: current time
+let u_time;
+
+let u_wave;
+let u_width;
+let u_height;
+
+let u_testImage;
+
+let testTexture;
+
+
+const wave = new Float32Array(5);
+
+let pos = 0;
 
 function main(time)
 {
 
     /*============= Drawing the Quad ================*/
 
+    wave[0] = time * 0.0031;
+    wave[1] = time * -0.0007;
+    wave[2] = pos;
+    wave[3] = pos + 100;
+    wave[4] = Math.cos(time * 0.04) * 0.02 + 0.06;
+
+
+    pos = time * 0.1 % config.height;
+
     gl.uniform1f(u_time, time);
+    gl.uniform1fv(u_wave, wave);
+    gl.uniform1f(u_width, config.width);
+    gl.uniform1f(u_height, config.height);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, testTexture);
+
+    gl.uniform1i(u_testImage, 0);
+
+
 
     // Draw the triangle
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
-    raf(main);
+    requestAnimationFrame(main);
 }
 
 
@@ -44,8 +76,26 @@ const vertices = [
 const indices = [3, 2, 1, 3, 1, 0];
 
 
-function init()
+
+
+
+function resize(ev)
 {
+    const width = (window.innerWidth) & ~15;
+    const height = (window.innerHeight) | 0;
+
+    config.width = width;
+    config.height = height;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+window.onload = () => loadImage("media/tv.png").then( testImage => {
+
+    console.log("TEST", testImage, testImage.width, testImage.height);
 
     canvas = document.getElementById("screen");
 
@@ -57,17 +107,9 @@ function init()
 
     canvas.width = width;
     canvas.height = height;
-
-    const img  = document.getElementById("bg");
-
-    img.setAttribute("width", width)
-    img.setAttribute("height", height)
-    img.className = "";
-
-
     /*============ Creating a canvas =================*/
 
-    gl = canvas.getContext("experimental-webgl");
+    gl = canvas.getContext("webgl");
 
     /*========== Defining and storing the geometry =========*/
 
@@ -136,7 +178,6 @@ function init()
     // store the combined shader program
     const shaderProgram = gl.createProgram();
 
-
     // Attach a vertex shader
     gl.attachShader(shaderProgram, vertShader);
 
@@ -153,6 +194,10 @@ function init()
     }
 
     u_time = gl.getUniformLocation(shaderProgram, "time");
+    u_wave = gl.getUniformLocation(shaderProgram, "wave");
+    u_testImage = gl.getUniformLocation(shaderProgram, "testImage");
+    u_width = gl.getUniformLocation(shaderProgram, "width");
+    u_height = gl.getUniformLocation(shaderProgram, "height");
 
     // Use the combined shader program object
     gl.useProgram(shaderProgram);
@@ -175,19 +220,49 @@ function init()
     gl.enableVertexAttribArray(coord);
 
     // Clear the canvas
-    gl.clearColor(0.5, 0.5, 0.5, 0.9);
+    gl.clearColor(0,0,0,1);
 
     // Enable the depth test
     gl.enable(gl.DEPTH_TEST);
 
     // Clear the color buffer bit
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // Set the view port
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    raf(main);
-}
+    // TEXTURE
 
 
-domready(init);
+    testTexture = gl.createTexture();
+    // gl.bindTexture(gl.TEXTURE_2D, testTexture);
+    // // Fill the texture with a 1x1 blue pixel.
+    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+    //     new Uint8Array([0, 0, 255, 255]));
+
+    gl.bindTexture(gl.TEXTURE_2D, testTexture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, testImage);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
+    // testTexture = gl.createTexture();
+    // gl.bindTexture(gl.TEXTURE_2D, testTexture);
+    //
+    // // Set the parameters so we can render any size image.
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    // // Upload the image into the texture.
+    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, testImage);
+    // gl.generateMipmap(gl.TEXTURE_2D);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, testTexture);
+
+    gl.uniform1i(u_testImage, 0);
+    window.addEventListener("resize", resize, true);
+
+    requestAnimationFrame(main);
+})
+;
+
