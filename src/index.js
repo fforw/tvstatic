@@ -29,7 +29,7 @@ let u_testImage;
 let testTexture;
 
 
-const wave = new Float32Array(5);
+const wave = new Float32Array(6);
 
 let pos = 0;
 
@@ -43,6 +43,7 @@ function main(time)
     wave[2] = pos;
     wave[3] = pos + 100;
     wave[4] = Math.cos(time * 0.04) * 0.02 + 0.06;
+    wave[5] = 0.45 + Math.sin(time * 0.0003) * 0.25 + Math.cos(time * 0.0005) * 0.15;
 
 
     pos = time * 0.1 % config.height;

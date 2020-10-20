@@ -1,7 +1,7 @@
 precision mediump float;
 
 uniform float time;
-uniform float wave[5];
+uniform float wave[6];
 uniform float width;
 uniform float height;
 
@@ -49,7 +49,8 @@ float noise(vec2 v){
 
 void main(void) {
 
-    float signalToNoise = 0.5;
+    //float signalToNoise = 0.5;
+    float signalToNoise = wave[5];
     float colorOffset = 0.7;
 
     float n0 = noise(vec2(time * 0.17,time * 0.31));
