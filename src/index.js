@@ -36,8 +36,7 @@ let pos = 0;
 function main(time)
 {
 
-    /*============= Drawing the Quad ================*/
-
+    // update distortion parameters
     wave[0] = time * 0.0031;
     wave[1] = time * -0.0007;
     wave[2] = pos;
@@ -48,19 +47,13 @@ function main(time)
 
     pos = time * 0.1 % config.height;
 
+    // update uniforms
     gl.uniform1f(u_time, time);
     gl.uniform1fv(u_wave, wave);
     gl.uniform1f(u_width, config.width);
     gl.uniform1f(u_height, config.height);
 
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, testTexture);
-
-    gl.uniform1i(u_testImage, 0);
-
-
-
-    // Draw the triangle
+    // Draw the quad
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
     requestAnimationFrame(main);
@@ -108,7 +101,6 @@ window.onload = () => loadImage("media/tv.png").then( testImage => {
 
     canvas.width = width;
     canvas.height = height;
-    /*============ Creating a canvas =================*/
 
     gl = canvas.getContext("webgl");
 
@@ -194,6 +186,7 @@ window.onload = () => loadImage("media/tv.png").then( testImage => {
         return;
     }
 
+    // get uniform locations
     u_time = gl.getUniformLocation(shaderProgram, "time");
     u_wave = gl.getUniformLocation(shaderProgram, "wave");
     u_testImage = gl.getUniformLocation(shaderProgram, "testImage");
@@ -233,37 +226,19 @@ window.onload = () => loadImage("media/tv.png").then( testImage => {
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     // TEXTURE
-
-
     testTexture = gl.createTexture();
-    // gl.bindTexture(gl.TEXTURE_2D, testTexture);
-    // // Fill the texture with a 1x1 blue pixel.
-    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-    //     new Uint8Array([0, 0, 255, 255]));
 
     gl.bindTexture(gl.TEXTURE_2D, testTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, testImage);
     gl.generateMipmap(gl.TEXTURE_2D);
 
-    // testTexture = gl.createTexture();
-    // gl.bindTexture(gl.TEXTURE_2D, testTexture);
-    //
-    // // Set the parameters so we can render any size image.
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    // // Upload the image into the texture.
-    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, testImage);
-    // gl.generateMipmap(gl.TEXTURE_2D);
-
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, testTexture);
 
     gl.uniform1i(u_testImage, 0);
+
     window.addEventListener("resize", resize, true);
 
     requestAnimationFrame(main);
-})
-;
+});
 
